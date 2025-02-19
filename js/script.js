@@ -1,5 +1,5 @@
 import Swiper from '../plugins/swiper/swiper-bundle.min.js';
-import { fetchApi } from '../../plugins/fetch/fetch.js';
+import { fetchApi } from '../plugins/fetch/fetch.js';
 
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
