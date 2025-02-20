@@ -6207,6 +6207,7 @@ initLightgallery();
     let res = {};
 
     renderEl.classList.add('_loading');
+    priceTable.classList.add('_loading');
 
     // Получение данных. На бэк отправляем параметр city с текущим значением селекта
     // *Базовый путь к API можно поменять в файле plugins/fetch.js
@@ -6304,13 +6305,16 @@ initLightgallery();
     productPrice.forEach(el => el.innerHTML = `от ${ formatedNum(minPrice) } ₽`);
 
     if (!table) {
+      priceTable.classList.remove('_loading');
       return;
     }
 
     priceTable.innerHTML = '';
     table.forEach(row => {
       priceTable.appendChild(getTableRow(row));
-    })
+    });
+
+    priceTable.classList.remove('_loading');
   }
 
   const updatePrice = async (selectorData) => {
