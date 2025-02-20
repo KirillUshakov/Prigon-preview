@@ -1,5 +1,5 @@
 import Swiper from '../plugins/swiper/swiper-bundle.min.js';
-import { fetchApi } from '../../plugins/fetch/fetch.js';
+import { fetchApi } from '../plugins/fetch/fetch.js';
 
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -4938,17 +4938,29 @@ function slideToggle (el, callback) {
   }
 
   el.style.height = '';
+  el.style.overflow = '';
   el.classList.add(animClass);
   el.animate(
     doOpen ? keyFrames : keyFrames.reverse(),
     animOptions
   ).finished.then(() => {
     el.style.height = doOpen ? 'unset !important' : '';
+    el.style.overflow = doOpen ? 'unset !important' : '';
     el.classList.remove(animClass);
     callback();
   });
 
   el.classList.toggle('_active', doOpen);
+}
+
+function wrapString (str = '', tag = 'div', doWrap = true) {
+  let res = str;
+
+  if (doWrap) {
+    res = `<${tag}>` + str + `</${tag}>`;
+  }
+
+  return res;
 }
 
 
@@ -5710,6 +5722,7 @@ document.addEventListener('click', (e) => {
     function reset () {
       optionHandler(options[0], null, true);
     }
+
     function filterOptionList (inputVal = input.value.toLowerCase()) {
       let foundedOptionsCount = 0;
       const notFoundOption = optionListInner.querySelector('.select__option--not-found');
@@ -5752,6 +5765,7 @@ document.addEventListener('click', (e) => {
         notFoundOption.remove();
       }
     }
+
     function toggleOptionList (doClose = false) {
       if (!doClose) {
         closeOthersSelects(select);
@@ -5791,6 +5805,22 @@ document.addEventListener('click', (e) => {
         }
       }
     }
+
+    function dispatchSelectorChange () {
+      targetSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      targetSelect.dispatchEvent(new CustomEvent('select-change', { bubbles: true }));
+      document.dispatchEvent(new CustomEvent('selector-change', {
+        bubbles: true,
+        detail: {
+          el: targetSelect,
+          id: targetSelect.id,
+          name: targetSelect.name,
+          value: targetSelect.value,
+          renderEl: select,
+        }
+      }))
+    }
+
     function optionHandler (option, e, isInit = false) {
       e?.stopPropagation();
 
@@ -5801,8 +5831,7 @@ document.addEventListener('click', (e) => {
       setActiveOption(option);
       updateValue(option);
       filterOptionList('');
-      targetSelect.dispatchEvent(new Event('change'));
-      targetSelect.dispatchEvent(new CustomEvent('select-change', { bubbles: true }));
+      dispatchSelectorChange();
 
       if (option.dataset.href && !isInit) {
         window.locaiton.href = option.dataset.href;
@@ -5810,12 +5839,14 @@ document.addEventListener('click', (e) => {
 
       select.classList.toggle('_changed', !isInit);
     }
+
     function setActiveOption (option) {
       options.forEach(el => el.classList.remove('active'));
       option.classList.add('active');
 
       toggleOptionList(true);
     }
+
     function updateValue (option) {
       const value = option.dataset.value;
 
@@ -6161,6 +6192,142 @@ initVideoPlay();
   });
 }
 initLightgallery();
+
+  function initProductPriceChange () {
+  const selector = document.getElementById('product-delivery-city');
+  const pricePopup = document.getElementById('price-info-popup');
+  const productPrice = document.querySelectorAll('[data-product-price]');
+  const priceTable = pricePopup?.querySelector('.price-table');
+
+  if (!selector || !pricePopup) {
+    return;
+  }
+
+  const getData = async ({ value, renderEl, }) => {
+    let res = {};
+
+    renderEl.classList.add('_loading');
+
+    // Получение данных. На бэк отправляем параметр city с текущим значением селекта
+    // *Базовый путь к API можно поменять в файле plugins/fetch.js
+    // try {
+    //   res = await fetchApi.get('/', { city: value, });
+    //   res = await res.json();
+    // } catch (e) {
+    //   renderEl.classList.remove('_loading');
+    // }
+
+    // Пример ответа
+    res = {
+      minPrice: 1320174,
+      priceTable: [
+        {
+          name: 'Стоимость авто на аукционе',
+          value: '14 800 000 ₩',
+        },
+        {
+          name: 'Комиссия агента в Корее',
+          value: '740 000 ₩',
+        },
+        {
+          name: 'Расходы в Корее',
+          value: '500 000 ₩',
+        },
+        {
+          name: 'Доставка до порта во Владивостоке',
+          value: '750 $',
+        },
+        {
+          name: 'Комиссия Японии-Трейд (агента)',
+          value: '50 000 ₽',
+        },
+        {
+          name: 'Расходы по России',
+          note: 'Таможенное оформление автомобиля, услуги брокера, базовая ставка СВХ, вывоз на стоянку, фотоотчёт; расходы, связанные с лабораторией',
+          value: '50 000 ₽',
+        },
+        {
+          name: 'Утилизационный сбор',
+          value: '5 200 ₽',
+        },
+        {
+          name: 'Итого в Москве с ПТС',
+          value: '1 320 174 ₽',
+          total: true,
+        },
+      ],
+    }
+
+    // Проверка разных данных
+    if (value == 'Уфа') {
+      res = {
+        minPrice: 124000,
+        priceTable: [
+          {
+            name: 'Доставка до уфы',
+            value: '124 000 р.',
+            note: 'Транспортная и тд',
+          },
+          {
+            name: 'Общая стоимость',
+            value: '124 000 р.',
+            total: true,
+          },
+        ]
+      }
+    }
+
+    renderEl.classList.remove('_loading');
+
+    return res;
+  }
+
+  const getTableRow = ({ name, value, total, note }) => {
+    return getNodeFromString(`
+      <div class="table-row ${ total ? 'table-row--total' : '' }">
+
+        ${ wrapString(
+            `
+              <span>${ name }</span>
+              ${ note ? `<span class="note">${ note }</span>` : '' }
+            `,
+            'div',
+            note
+        )}
+
+        <span>${ value }</span>
+      </div>
+    `);
+  }
+
+  const updateTemplate = ({ minPrice, priceTable: table }) => {
+    productPrice.forEach(el => el.innerHTML = `от ${ formatedNum(minPrice) } ₽`);
+
+    if (!table) {
+      return;
+    }
+
+    priceTable.innerHTML = '';
+    table.forEach(row => {
+      priceTable.appendChild(getTableRow(row));
+    })
+  }
+
+  const updatePrice = async (selectorData) => {
+    const data = await getData(selectorData);
+
+    updateTemplate(data);
+  }
+
+  document.addEventListener('selector-change', ({ detail }) => {
+    if (detail.id != 'product-delivery-city') {
+      return;
+    }
+
+    updatePrice(detail);
+  });
+}
+initProductPriceChange();
 
   function initScrollUp () {
   const triggers = document.querySelectorAll('[data-scroll-up]');

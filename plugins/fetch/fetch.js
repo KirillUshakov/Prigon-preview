@@ -35,4 +35,4 @@ export class fetchModule {
   }
 }
 
-export const fetchApi = new fetchModule('https://checkinfly.ru/api/');
+export const fetchApi = new fetchModule('https://prigon.auto/api/');

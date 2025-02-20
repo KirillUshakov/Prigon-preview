@@ -3049,18 +3049,20 @@ label {
   color: transparent;
 }
 
-._loading {
+._loading,
+._pulse-loading {
   position: relative;
   pointer-events: none;
   -webkit-animation: _loading 2s linear infinite;
           animation: _loading 2s linear infinite;
 }
 
-._loading::before {
+._loading::before,
+._pulse-loading::before {
   content: "";
   display: block;
-  width: 5.00rem;
-  height: 5.00rem;
+  width: 3.50rem;
+  height: 3.50rem;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -3074,6 +3076,10 @@ label {
   -webkit-animation: rotate360 1.5s linear infinite;
           animation: rotate360 1.5s linear infinite;
   z-index: 5;
+}
+
+._pulse-loading::before {
+  content: unset;
 }
 
 @-webkit-keyframes rotate360 {
@@ -7817,6 +7823,10 @@ a.brand-card:hover {
 .filter__toggle-content {
   height: 0;
   overflow: hidden;
+}
+
+.filter__toggle-content .selector__list-wrapper {
+  height: 0;
 }
 
 .filter__toggle-inner {
